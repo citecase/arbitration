@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supreme Court Judgments On Arbitration Law (2026)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- PDF Generation Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        :root {
+            --primary: #000000;
+            --bg: #ffffff;
+            --border: #e5e7eb;
+            --legal-size: 1.125rem;
+        }
+
+        /* Set Georgia as the global font */
+        body { 
+            font-family: Georgia, 'Times New Roman', Times, serif; 
+            scroll-behavior: smooth; 
+            background-color: var(--bg); 
+            color: var(--primary); 
+            margin: 0; 
+        }
+
+        .legal-text { 
+            font-family: Georgia, 'Times New Roman', Times, serif; 
+            line-height: 1.8; 
+            white-space: pre-wrap; 
+            text-align: justify;
+            font-size: var(--legal-size);
+        }
+
+        h1, h2, h3, h4, button, input {
+            font-family: Georgia, 'Times New Roman', Times, serif !important;
+        }
+
+        .case-card { transition: all 0.2s ease; border-bottom: 1px solid var(--border); }
+        
+        .js-hidden { display: none !important; }
+        
+        /* Minimalist Scrollbar */
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #000000; border-radius: 10px; }
+
+        #authGate {
+            position: fixed; inset: 0; background: white; z-index: 1000;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .size-btn.active { background: black; color: white; }
+        
+        /* Off-screen container for PDF generation */
+        #pdf-export-container {
+            position: absolute;
+            left: -9999px;
+            top: 0;
+            width: 800px;
+        }
+        
+        @media print {
+            .no-print { display: none !important; }
+            .case-card { border-bottom: 2px solid black; page-break-inside: avoid; }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Authentication Gate -->
+    <div id="authGate">
+        <div class="max-w-md w-full p-8 text-center">
+            <h1 class="text-3xl font-black uppercase tracking-[0.1em] mb-12">CiteCase Search</h1>
+            <input type="password" id="codeInput" maxlength="4" placeholder="••••" 
+                   class="w-32 py-2 border-b-2 border-black text-center text-3xl focus:outline-none bg-transparent placeholder:text-gray-200">
+            <p id="authError" class="text-red-600 text-xs mt-6 js-hidden">Invalid code.</p>
+        </div>
+    </div>
+
+    <!-- Off-screen Template for PDF Export -->
+    <div id="pdf-export-container">
+        <div id="pdf-content"></div>
+    </div>
+
+    <!-- Main Content Container -->
+    <div id="mainContent" class="js-hidden">
+        <header class="border-b border-black py-16 px-6 text-center relative">
+            <div class="max-w-4xl mx-auto">
+                <div class="flex flex-col items-center">
+                    <h1 class="text-3xl font-black uppercase tracking-[0.1em] mb-4">CiteCase Search</h1>
+                    <h2 class="text-lg md:text-xl font-medium tracking-wide text-gray-500 mb-8 italic">SC Judgments on Arbitration Law (2026)</h2>
+                    
+                    <div class="flex flex-wrap items-center justify-center gap-3 mb-8">
+                        <div id="caseCount" class="text-[10px] uppercase tracking-[0.2em] text-black font-bold border border-black px-4 py-2 rounded-full">
+                            Loading judgments...
+                        </div>
+                        <div class="text-[10px] uppercase tracking-[0.2em] text-gray-500 font-bold border border-gray-200 px-4 py-2 rounded-full">
+                            Last Updated: 7 January 2026
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-wrap items-center justify-center gap-4 no-print">
+                        <div class="flex items-center gap-2 border border-black p-1 rounded">
+                            <span class="text-[9px] uppercase font-bold px-2">Text Size:</span>
+                            <button onclick="updateTextSize('0.875rem', this)" class="size-btn text-[10px] px-2 py-0.5 border border-transparent hover:border-black transition">S</button>
+                            <button onclick="updateTextSize('1.125rem', this)" class="size-btn active text-[10px] px-2 py-0.5 border border-transparent transition">M</button>
+                            <button onclick="updateTextSize('1.5rem', this)" class="size-btn text-[10px] px-2 py-0.5 border border-transparent hover:border-black transition">L</button>
+                        </div>
+                        <button onclick="smartDownload()" class="text-[10px] uppercase tracking-widest border border-black px-4 py-1.5 hover:bg-black hover:text-white transition">
+                            <i class="fas fa-file-pdf mr-2 text-red-600"></i> Download PDF
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="max-w-4xl mx-auto p-6 mt-10">
+            <main class="space-y-16">
+                <div class="no-print mb-16">
+                    <div class="relative text-center">
+                        <input type="text" id="caseSearch" onkeyup="render()" placeholder="Filter by text, citation, or section..." 
+                               class="w-full py-6 border-b-2 border-black bg-transparent text-2xl text-center focus:outline-none placeholder:text-gray-200 font-light italic">
+                    </div>
+                </div>
+
+                <div id="casesContainer" class="space-y-20"></div>
+                <div id="emptyState" class="js-hidden text-center py-20 text-gray-400 font-light italic">
+                    No results found for your search criteria.
+                </div>
+
+                <footer class="pt-20 pb-20 border-t border-gray-100 text-gray-400 text-[10px] uppercase tracking-widest text-center">
+                    <p>© 2026 CiteCase.in</p>
+                </footer>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // --- SECURITY SECTION ---
+        const MASTER_CODE = "1996";
+        const AUTH_KEY = 'citecase_authorized_access';
+
+        function showContent() {
+            document.getElementById('authGate').classList.add('js-hidden');
+            document.getElementById('mainContent').classList.remove('js-hidden');
+            render();
+            window.scrollTo(0, 0);
+        }
+
+        function checkAccess() {
+            const input = document.getElementById('codeInput').value.trim();
+            const error = document.getElementById('authError');
+            
+            if (input === MASTER_CODE) {
+                localStorage.setItem(AUTH_KEY, 'true');
+                showContent();
+            } else {
+                error.classList.remove('js-hidden');
+                document.getElementById('codeInput').value = '';
+                setTimeout(() => error.classList.add('js-hidden'), 2000);
+            }
+        }
+
+        // Automatic unlock when 4 digits are entered
+        document.getElementById('codeInput').addEventListener('input', (e) => {
+            if (e.target.value.length === 4) {
+                checkAccess();
+            }
+        });
+
+        function logout() {
+            localStorage.removeItem(AUTH_KEY);
+            location.reload();
+        }
+
+        // --- UTILITY FUNCTIONS ---
+        function updateTextSize(size, btn) {
+            document.documentElement.style.setProperty('--legal-size', size);
+            document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        function smartDownload() {
+            const filter = document.getElementById('caseSearch').value.toLowerCase().trim();
+            let dataToExport = [];
+            let fileName = 'arbitration_judgments_full';
+
+            if (filter === '') {
+                dataToExport = cases;
+            } else {
+                dataToExport = cases.filter(c => {
+                    return `${c.title} ${c.citation} ${c.tags.join(' ')} ${c.sections.map(s => s.text).join(' ')}`.toLowerCase().includes(filter);
+                });
+                fileName = 'arbitration_judgments_filtered';
+            }
+            
+            exportData(dataToExport, fileName);
+        }
+
+        function exportData(dataArray, filename) {
+            if (!dataArray || dataArray.length === 0) return;
+            
+            const pdfContent = document.getElementById('pdf-content');
+            pdfContent.innerHTML = `
+                <div style="font-family: Georgia, serif; border-bottom: 2px solid black; padding-bottom: 20px; margin-bottom: 30px; text-align: center;">
+                    <h1 style="font-size: 16px; letter-spacing: 1px; margin-bottom: 5px; font-weight: 900;">CiteCase Search</h1>
+                    <h2 style="font-size: 10px; font-weight: 500; text-transform: uppercase; color: #666; margin: 0;">SC Judgments on Arbitration Law (2026)</h2>
+                    <p style="font-size: 8px; color: #999; text-transform: uppercase; margin-top: 10px;">Generated on ${new Date().toLocaleDateString()}</p>
+                </div>
+            `;
+
+            dataArray.forEach((c) => {
+                const caseDiv = document.createElement('div');
+                caseDiv.style.marginBottom = '40px';
+                caseDiv.style.pageBreakInside = 'avoid';
+                caseDiv.innerHTML = `
+                    <div style="font-size: 9px; text-transform: uppercase; font-weight: bold; color: #999; margin-bottom: 5px; font-family: Georgia, serif;">${c.citation} / ${c.tags.join(', ')}</div>
+                    <h3 style="font-size: 20px; font-weight: bold; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; font-family: Georgia, serif;">${c.title}</h3>
+                    <div style="font-family: Georgia, serif; text-align: justify; font-size: 12px; line-height: 1.6;">
+                        ${c.sections.map(s => `
+                            <p style="margin-bottom: 15px;"><strong>${s.heading}</strong> — ${s.text}</p>
+                        `).join('')}
+                    </div>
+                `;
+                pdfContent.appendChild(caseDiv);
+            });
+
+            const opt = {
+                margin: [15, 15, 15, 15],
+                filename: `${filename}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, logging: false },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(pdfContent).save().then(() => {
+                pdfContent.innerHTML = '';
+            });
+        }
+
+        function downloadNotes(caseId) {
+            const c = cases.find(item => item.id === caseId);
+            if (c) exportData([c], c.title.replace(/[^a-z0-9]/gi, '_').toLowerCase() + '_notes');
+        }
+
+        // --- DATA SECTION ---
+        const cases = [
+            {
+                id: "case1",
+                citation: "2026 INSC 34",
+                tags: ["Ss.34, 37 Arbitration Act"],
+                title: "Jan De Nul Dredging India Pvt. Ltd. v. Tuticorin Port Trust",
+                pdfLink: "https://www.caseciter.com/content/files/2026/01/Jan-De-Nul-Dredging-India-Pvt.-Ltd.-v.-Tuticorin-Port-Trust--2026-INSC-34---Ss.34-37-Arbitration-Act.pdf",
+                sections: [
+                    {
+                        heading: "Arbitration and Conciliation Act - Section 34, 37",
+                        text: "The scope of interference of the court with the arbitral matters is virtually prohibited, if not absolutely barred. The powers of the Appellate Court are even more restricted than the powers conferred by Section 34 of the Act. The appellate power under Section 37 of the Act is exercisable only to find out if the court exercising power under Section 34 of the Act, has acted within its limits as prescribed thereunder or has exceeded or failed to exercise the power so conferred. The Appellate Court exercising powers under Section 37 of the Act has no authority of law to consider the matter in dispute before the Arbitral Tribunal on merits so as to hold as to whether the award of the Arbitral Tribunal is right or wrong. The Appellate Court in exercise of such power cannot sit as an ordinary court of appeal and reappraise the evidence to record a contrary finding. The award of the Arbitral Tribunal cannot be touched by the court unless it is contrary to the substantive provision of law or any provision of the Act or the terms of the agreement. (Para 37)"
+                    },
+                    {
+                        heading: "Arbitration",
+                        text: "The Act is a special enactment which aims to resolve contractual/commercial disputes through arbitration with the minimum intervention of the court, if not without the intervention of the court. In the event, the courts are allowed to step in at every stage and the arbitral awards are subjected to challenge before the courts in hierarchy before court of first instance, through regular appeals and finally by means of SLP/Civil Appeal before the Supreme Court, it would obviate/frustrate and defeat the very purpose of the Act. It is, therefore, necessary to accept the arbitral award if it is not patently illegal or does not fall within the scope of intervention under Section 34 of the Act. The appeal thereof has a much narrower scope of intervention particularly when the arbitral award has been upheld under Section 34 of the Act. The appellate jurisdiction acquires little significance only when the arbitral award has been erroneously upheld or set aside by the court in exercise of its power under Section 34 of the Act. (Para 51)"
+                    }
+                ]
+            },
+            {
+                id: "case2",
+                citation: "2026 INSC 32",
+                tags: ["Ss.9, 21 Arbitration Act"],
+                title: "Regenta Hotels Private Limited v. Hotel Grand Centre Point",
+                pdfLink: "https://www.caseciter.com/content/files/2026/01/Regenta-Hotels-Private-Limited-v.--Hotel-Grand-Centre-Point---2026-INSC-32---Ss.9-21-Arbitration-Act-.pdf",
+                sections: [
+                    {
+                        heading: "Arbitration and Conciliation Act 1996 - Section 9, 11, 21",
+                        text: "The commencement of arbitral proceedings is a statutory event defined exclusively under Section 21, wherein the respondent’s receipt of a request to refer the dispute to arbitration sets the arbitral proceedings in motion and no judicial application i.e. whether under Section 9 or Section 11 petition, constitutes commencement. Therefore, the statutory consequences tied to commencement, including the mandate under Section 9(2), must be assessed solely with reference to the date of receipt of request invoking arbitration under Section 21. (Para 23) Arbitration (Proceedings Before the Courts) Rules, 2001-Rule 9(4) - Section 9 does not provide for the consequences of non-compliance with its mandate of commencing arbitral proceedings within ninety days, however, the said vacuum stands statutorily filled through Rule 9(4) - The expression “initiated” has necessarily to be read as “commenced” within the meaning of Section 21 -Upon failure to commence arbitral proceedings within three months, the period stipulated under Rule 9(4) attracts the consequence as provided therein, namely, the interim order shall stand vacated automatically. (Para 27)"
+                    },
+                    {
+                        heading: "Arbitration and Conciliation Act 1996 - Section 9",
+                        text: "In absence of any other provision providing for the date of commencement of the arbitral proceedings, Section 21 is to be construed to apply to all the provisions of the Act unless specifically provided as not applicable. The only exception that is carved out in Section 21 pertains to the arbitral agreement itself, providing that unless otherwise agreed by the parties, the date of commencement of arbitral proceedings must be from the date when notice or request invoking arbitration is received by the respondent. (Para 24)"
+                    },
+                    {
+                        heading: "Words and Phrases",
+                        text: "The term “initiation” connotes the act of causing something to begin or taking the first step towards beginning a process, whereas “commencement” denotes the actual beginning of the process itself, which is a step further than mere initiation. Thus, linguistically, initiation precedes commencement. [In this case, SC held that for the purposes of Rule 9(4), the expression “initiated” has necessarily to be read as “commenced” within the meaning of Section 21 of the Act]"
+                    }
+                ]
+            },
+            {
+                id: "case3",
+                citation: "2026 INSC 6",
+                tags: ["Arbitration - Ineligibility"],
+                title: "Bhadra International (India) Pvt. Ltd. vs Airports Authority of India",
+                pdfLink: "https://www.caseciter.com/content/files/2026/01/Bhadra-International--India--Pvt.-Ltd.---vs-Airports-Authority-of-India-2026-INSC-6---Arbitration---Ineligibility-.pdf",
+                sections: [
+                    {
+                        heading: "Arbitration and Conciliation Act 1996- Section 12(5)",
+                        text: "The ineligibility of an arbitrator can be waived only by an express agreement in writing. The requirement of the waiver to be made expressly in the form of agreement in writing ensures that parties are not divested of their right to object inadvertently or by procedural happenstance. (Para 89-90) A notice invoking the arbitration clause under Section 21, a procedural order, submission of statement of claim, the filing an application seeking interim relief, or a reply to an application under Section 33 cannot be countenanced to mean “an express agreement in writing” within the meaning of the proviso to sub-section (5) of Section 12. (Para 96) The arbitrator upon entering reference and at the very first hearing, to ensure from the parties that they are willing to participate in the proceedings and to insist upon a written agreement waiving the requirement of Section 12(5) (Para 121)"
+                    },
+                    {
+                        heading: "Arbitration and Conciliation Act 1996- Section 12(5)",
+                        text: "A challenge to an arbitrator’s ineligibility could be raised at any stage because an award passed in such circumstance is non-est, i.e., it carries no enforceability or recognition in law - When an arbitrator is found to be ineligible by virtue of Section 12(5) read with the Seventh Schedule, his mandate is automatically terminated. In such circumstance, an aggrieved party may approach the court under Section 14 read with Section 15 for appointment of a substitute arbitrator. Whereas, when an award has been passed by such an arbitrator, an aggrieved party may approach the court under Section 34 for setting aside the award. (Para 123-iv)"
+                    }
+                ]
+            },
+            {
+                id: "case4",
+                citation: "2026 INSC 5",
+                tags: ["Arbitration Act"],
+                title: "Motilal Oswal Financial Service Limited vs Santosh Cordeiro",
+                pdfLink: "https://www.caseciter.com/content/files/2026/01/Motilal-Oswal-Financial-Service-Limited-vs-Santosh-Cordeiro-2026-INSC-5---Arbitration-Act.pdf",
+                sections: [
+                    {
+                        heading: "Arbitration and Conciliation Act 1996 - Section 11",
+                        text: "In a proceeding under Section 11, the Court is to confine the examination to the existence of an Arbitration Agreement - The jurisdiction is only to inspect or scrutinize the dealings between the parties for determination about the existence of an Arbitration Agreement and not to launch a laborious or a contested inquiry. (Para 15-17)"
+                    }
+                ]
+            },
+            {
+                id: "case5",
+                citation: "2026 INSC 4",
+                tags: ["Arbitration Act"],
+                title: "Bhagheeratha Engineering Ltd vs State of Kerala",
+                pdfLink: "https://www.caseciter.com/content/files/2026/01/Bhagheeratha-Engineering-Ltd-vs-State-of-Kerala-2026-INSC-4--Arbitration-Act.pdf",
+                sections: [
+                    {
+                        heading: "Arbitration and Conciliation Act - Section 21",
+                        text: "The object is only for the purpose of commencement of arbitral proceedings is also well settled. Section 21 is concerned only with determining the commencement of the dispute for the purpose of reckoning limitation. There is no mandatory prerequisite for issuance of a Section 21 notice prior to the commencement of Arbitration. (Para 16)"
+                    }
+                ]
+            }
+        ];
+
+        function render() {
+            const filter = document.getElementById('caseSearch').value.toLowerCase();
+            const container = document.getElementById('casesContainer');
+            const emptyState = document.getElementById('emptyState');
+            const countDisplay = document.getElementById('caseCount');
+            
+            container.innerHTML = '';
+            let visibleCount = 0;
+
+            cases.forEach(c => {
+                const searchStr = `${c.title} ${c.citation} ${c.tags.join(' ')} ${c.sections.map(s => s.text).join(' ')}`.toLowerCase();
+                if (!searchStr.includes(filter)) return;
+
+                visibleCount++;
+                const article = document.createElement('article');
+                article.id = c.id;
+                article.className = "case-card pb-16";
+                article.innerHTML = `
+                    <div class="mb-8">
+                        <div class="flex items-center justify-between flex-wrap gap-4 mb-4">
+                            <div class="flex items-center gap-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                                <span>${c.citation}</span>
+                                <span>/</span>
+                                <span>${c.tags.join(', ')}</span>
+                            </div>
+                            <div class="flex items-center gap-2 no-print">
+                                <button onclick="downloadNotes('${c.id}')" title="Export as PDF" class="text-[10px] font-bold uppercase tracking-widest text-black border border-black px-3 py-1 hover:bg-black hover:text-white transition flex items-center gap-2">
+                                    <i class="fas fa-file-pdf"></i> Notes
+                                </button>
+                                ${c.pdfLink ? `
+                                    <a href="${c.pdfLink}" target="_blank" title="Original PDF" class="text-[10px] font-bold uppercase tracking-widest text-black border border-black px-3 py-1 hover:bg-black hover:text-white transition flex items-center gap-2">
+                                        <i class="fas fa-external-link-alt"></i> Judgment
+                                    </a>
+                                ` : ''}
+                            </div>
+                        </div>
+                        <h2 class="text-3xl font-bold tracking-tight">${c.title}</h2>
+                    </div>
+                    <div class="space-y-8">
+                        ${c.sections.map(s => `<div class="legal-text text-black"><strong>${s.heading}</strong> — ${s.text}</div>`).join('')}
+                    </div>
+                `;
+                container.appendChild(article);
+            });
+
+            countDisplay.innerText = `${visibleCount} Judgments Available`;
+            emptyState.classList.toggle('js-hidden', visibleCount > 0);
+        }
+
+        window.onload = function() {
+            if (localStorage.getItem(AUTH_KEY) === 'true') {
+                showContent();
+            }
+        };
+    </script>
+</body>
+</html>
